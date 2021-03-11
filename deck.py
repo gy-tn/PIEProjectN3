@@ -51,6 +51,3 @@ def create_deck(suits:list, ranks:dict) -> list:
 
 
 deck = create_deck(suits, ranks)
-
-# for card in deck:
-#     print(card, end=' ')
