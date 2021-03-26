@@ -32,6 +32,7 @@ def drawField(deck, trump, data):
     for i in range(1, 7):
         print(str(i) + '.    ' + str(data['attacks'][i]) + ' / ' + str(data['defences'][i]))
 
+    print('\n', end='')
 
 
 def whoseFirstMove(players:list, trump:str):
@@ -56,7 +57,7 @@ def whoseFirstMove(players:list, trump:str):
 def whoIsClockwise(players, player):
     try:
         nextPlayer = players[players.index(player) + 1]
-    except IndexError:
+    except (IndexError, ValueError):
         nextPlayer = players[0]
     return nextPlayer
 
@@ -104,7 +105,8 @@ def playRound(deck, trump, players, attacker):
         allowedCards = []
         attackingCard = data['attacks'][moveNumber]
         for card in defender.hand:
-            if (card.suit == attackingCard.suit and card.power > attackingCard.power) or (card.suit == trump and card.power > attackingCard.power):
+            if (card.suit == attackingCard.suit and card.power > attackingCard.power) \
+                or (card.suit == trump and card.power > attackingCard.power):
                 allowedCards.append(card)
         if allowedCards:
             move = sorted(allowedCards, key=lambda card: card.power)[0]
@@ -148,20 +150,25 @@ def playRound(deck, trump, players, attacker):
     roundData['message'] = f'{attacker.name} attacks {defender.name}'
     drawField(deck, trump, roundData)
     
-    for i in range(1, 7):
+    for i in range(1, min(7, len(defender.hand) + 1)):
         attack = makeAttack(attacker, roundData)
         if attack:
             roundData['attacks'][i] = attack
             drawField(deck, trump, roundData)
+            nextAttacker = attacker2
         else:
-            attacker = defender
+            nextAttacker = defender
             break
         defence = makeDefence(defender, roundData, i, trump)
         if defence:
             roundData['defences'][i] = defence
             drawField(deck, trump, roundData)
+            if defender.hand:
+                nextAttacker = defender
+            else:
+                nextAttacker = attacker2
         else:
-            attacker = attacker2
+            nextAttacker = attacker2
             break
 
         print(attacker)
@@ -174,8 +181,10 @@ def playRound(deck, trump, players, attacker):
             attacker2.hand.append(deck.pop())
         while len(defender.hand) < 6 and deck:
             defender.hand.append(deck.pop())
+
     
-    return attacker
+    
+    return nextAttacker
 
 
 def startGame(players:list):
@@ -220,9 +229,14 @@ def startGame(players:list):
             if player.hand:
                 playersWithCards.append(player)
         if len(playersWithCards) > 1:
-            attacker = playRound(deck, trumpSuit, players, attacker)
+            for player in playersWithCards:
+                print(player)
+            attacker = playRound(deck, trumpSuit, playersWithCards, attacker)
+        elif len(playersWithCards) == 0:
+            print('Nobody is Durak!')
+            break
         else:
-            print(playersWithCards[0].name + ' is Durak')
+            print(playersWithCards[0].name + ' is Durak!')
             break
 
     # drawField(deck, trumpSuit, data)
@@ -233,9 +247,15 @@ def startGame(players:list):
     
 p1 = Player('First', 'ai')
 p2 = Player('Second', 'human')
+p3 = Player('Third', 'ai')
+p4 = Player('Fourth', 'ai')
+p5 = Player('Fifth', 'ai')
 
 players = []
 players.append(p1)
 players.append(p2)
+players.append(p3)
+players.append(p4)
+players.append(p5)
 
 startGame(players)
