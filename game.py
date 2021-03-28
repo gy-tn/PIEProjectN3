@@ -32,7 +32,8 @@ def drawField(deck, trump, data, players):
         else:
             print(player.name)
             for card in range(len(player.hand)):
-                print(f'{card + 1}.## | ', end='')
+                # print(f'{card + 1}.## | ', end='')
+                print(f'{card + 1}.{str(player.hand[card])} | ', end='')
         print('\n')
     print('#' * 40 + '\n')
     print('#' * 15 + ' Table ' + '#' * 15)
@@ -144,7 +145,7 @@ def playRound(deck, trump, players, attacker):
             else:
                 return False
     
-    def addCards(attackers, data):
+    def addCards(attacker, data):
         """
         Attackers adding card to failed defence
         """
@@ -164,33 +165,32 @@ def playRound(deck, trump, players, attacker):
         
         # The first attacker add cards first, the second attacker is next
         if len(allowedCards):
-            for attacker in attackers:
-                if attacker.who == 'ai':
-                    data['message'] = greenBoldMessage(f'{attacker.name} can add cards')
-                    for card in attacker.hand:
-                        if card.rank in allowedCards:
-                            attacker.hand.remove(card)
-                            return card
-                        else:
-                            continue
-                else:
-                    data['message'] = greenBoldMessage('You can add cards')
-                    allowedMoves = possibleMoves(attacker, allowedCards)
-                    if attacker.hand:
-                        move = input('Your turn? ')
-                        while True:
-                            if move in allowedMoves:
-                                break
-                            move = input('Your turn? ')
-                        try:
-                            move = attacker.hand[int(move) - 1]
-                            attacker.hand.remove(move)
-                        except ValueError:
-                            return move
-                        return move
+            if attacker.who == 'ai':
+                sleep(2)
+                # data['message'] = greenBoldMessage(f'{attacker.name} can add cards')
+                for card in sorted(attacker.hand, key=lambda card: card.power):
+                    if card.rank in allowedCards:
+                        attacker.hand.remove(card)
+                        return card
                     else:
                         continue
-            return False
+            else:
+                # data['message'] = greenBoldMessage('You can add cards')
+                allowedMoves = possibleMoves(attacker, allowedCards)
+                if attacker.hand:
+                    move = input('Your turn? ')
+                    while True:
+                        if move in allowedMoves:
+                            break
+                        move = input('Your turn? ')
+                    try:
+                        move = attacker.hand[int(move) - 1]
+                        attacker.hand.remove(move)
+                    except ValueError:
+                        return move
+                    return move
+                # else:
+                #     return False
 
         # If nothing to add
         else:
@@ -322,7 +322,7 @@ def playRound(deck, trump, players, attacker):
     drawField(deck, trump, roundData, players)
 
     # Count of attacks can not be more than count of cards in defender's hand
-    allowedAttacks = len(defender.hand)
+    allowedAttacks = min(6, len(defender.hand))
 
     whoAttack = attacker
     asked = 0
@@ -404,16 +404,54 @@ def playRound(deck, trump, players, attacker):
         # If there is no card for defense
         else:
             # Attacker add cards to failed defense
-            for j in range(i + 1, allowedAttacks + 1):
-                if whoAttack.who == 'human':
+            
+            whoAdd = attacker
+            j = i
+            while True:
+                if whoAdd.who == 'ai':
                     roundData['message'] = \
-                        greenBoldMessage(f'You can add up to {allowedAttacks - j + 1} cards if you want to')
-                roundData['attacks'][j] = addCards(attackers, roundData)
+                        greenBoldMessage(f'{whoAdd.name} can add up to {allowedAttacks - j} cards')
+                else:
+                    roundData['message'] = \
+                        greenBoldMessage(f'You can add up to {allowedAttacks - j} cards')
                 drawField(deck, trump, roundData, players)
-                if roundData['attacks'][j] and type(roundData['attacks'][j]) != str:
+                added = addCards(whoAdd, roundData)
+                if added and type(added) != str:
+                    roundData['attacks'][j + 1] = added
+                    drawField(deck, trump, roundData, players)
+                    j += 1
+                else:
+                    if len(players) > 2:
+                        if whoAdd == attacker2:
+                            break
+                        whoAdd = attacker2
+                    else:
+                        break
+                if j == allowedAttacks:
+                    break
+            sleep(2)
+            """
+            for j in range(i + 1, allowedAttacks + 1):
+                if whoAdd.who == 'ai':
+                    roundData['message'] = \
+                        greenBoldMessage(f'{whoAdd.name} can add up to {allowedAttacks - j + 1} cards')
+                else:
+                    roundData['message'] = \
+                        greenBoldMessage(f'You can add up to {allowedAttacks - j + 1} cards')
+                drawField(deck, trump, roundData, players)
+                added = addCards(whoAdd, roundData)
+                if added and type(added) != str:
+                    roundData['attacks'][j] = added
                     drawField(deck, trump, roundData, players)
                 else:
-                    break
+                    if len(players) > 2:
+                        if whoAdd == attacker2:
+                            break
+                        whoAdd = attacker2
+                    else:
+                        break
+            """
+
             # Defender takes all cards played in current round
             for card in roundData['attacks'].values():
                 if card:
@@ -436,6 +474,10 @@ def playRound(deck, trump, players, attacker):
             attacker2.hand.append(deck.pop())
         while len(defender.hand) < 6 and deck:
             defender.hand.append(deck.pop())
+    
+    if not defender.hand:
+        if len(players) > 2:
+            nextAttacker = attacker2
     
     return nextAttacker
 
