@@ -563,17 +563,17 @@ def startGame(players:list):
             break
     
     
-p1 = Player('Giga', 'human')
-p2 = Player('AI1', 'ai')
-p3 = Player('AI2', 'ai')
-p4 = Player('AI3', 'ai')
-p5 = Player('AI4', 'ai')
+# p1 = Player('Giga', 'human')
+# p2 = Player('AI1', 'ai')
+# p3 = Player('AI2', 'ai')
+# p4 = Player('AI3', 'ai')
+# p5 = Player('AI4', 'ai')
 
-players = []
-players.append(p1)
-players.append(p2)
+# players = []
+# players.append(p1)
+# players.append(p2)
 # players.append(p3)
 # players.append(p4)
 # players.append(p5)
 
-startGame(players)
+# startGame(players)

@@ -4,6 +4,7 @@ It interacts with user and executes the necessary files.
 """
 from colorText import *
 from os import get_terminal_size
+from game import startGame, Player
 
 
 def selectMode() -> str:
@@ -15,7 +16,7 @@ def selectMode() -> str:
     # Tell the user about game modes
     print(greenMessage(
         'Please choose a game mode:\n' + 
-        '1. Against the computer\n' +
+        '1. Against the computer (simple logic)\n' +
         '2. Create the Durak server for networking game\n' +
         '3. Connect to the Durak server for networking game\n' +
         '("q" to exit the program)\n'))
@@ -60,7 +61,20 @@ def main():
     if gameMode == 'q':
         print(greenBoldMessage('\nGoodbye!'))
     elif gameMode == '1':
-        pass
+        opponents = input('How many opponents do you want to play with? ')
+        while True:
+            try:
+                if int(opponents) in range(1, 6):
+                    break
+                else:
+                    opponents = input(redMessage('1, 2 ,3, 4 or 5 only: '))
+            except:
+                opponents = input(redMessage('1, 2 ,3, 4 or 5 only: '))
+        players = []
+        players.append(Player('Human', 'human'))
+        for player in range(1, int(opponents) + 1):
+            players.append(Player(f'Computer {player}', 'ai'))
+        startGame(players)
     elif gameMode == '2':
         pass
     else:
